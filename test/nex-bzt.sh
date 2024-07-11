@@ -1,14 +1,15 @@
 #!/bin/bash
+
 # to ensure if 1 command fails.. build fail
 
 # ensure prefix is pass in
 if [ $# -lt 1 ] ; then
-	echo "nex-bzt.sh needs prefix"
-	echo "eg: nex-bzt.sh local|url"
+    echo "nex-bzt.sh needs prefix"
+    echo "eg: nex-bzt.sh local|url"
     echo "eg: nex-bzt.sh local numOfuser hold_time ramp_up"
     echo "eg: nex-bzt.sh local 10 2h 3m"
     echo "      means 10 users, run for 2 hours and use 3 min to ramp up"
-	exit
+    exit
 fi
 
 PREFIX=$1
@@ -22,21 +23,21 @@ else
 fi
 
 if [ -z "$2" ]; then
-	NO_USERS=3
+    NO_USERS=3
 else
-	NO_USERS=$2
+    NO_USERS=$2
 fi
 
 if [ -z "$3" ]; then
-	HOLD=3m
+    HOLD=3m
 else
-	HOLD="$3"
+    HOLD="$3"
 fi
 
 if [ -z "$4" ]; then
-	RAMP_UP=1m
+    RAMP_UP=1m
 else
-	RAMP_UP="$4"
+    RAMP_UP="$4"
 fi
 
 DATA_SRC=./test/nex-users.csv
