@@ -1,11 +1,8 @@
 import pytest
-
 from mock import call
 from nameko.exceptions import RemoteError
-
 from orders.models import Order, OrderDetail
 from orders.schemas import OrderSchema, OrderDetailSchema
-
 
 @pytest.fixture
 def order(db_session):
@@ -13,7 +10,6 @@ def order(db_session):
     db_session.add(order)
     db_session.commit()
     return order
-
 
 @pytest.fixture
 def order_details(db_session, order):
@@ -28,18 +24,15 @@ def order_details(db_session, order):
     db_session.commit()
     return order_details
 
-
 def test_get_order(orders_rpc, order):
     response = orders_rpc.get_order(1)
     assert response['id'] == order.id
-
 
 @pytest.mark.usefixtures('db_session')
 def test_will_raise_when_order_not_found(orders_rpc):
     with pytest.raises(RemoteError) as err:
         orders_rpc.get_order(1)
     assert err.value.value == 'Order with id 1 not found'
-
 
 @pytest.mark.usefixtures('db_session')
 def test_can_create_order(orders_service, orders_rpc):
@@ -79,18 +72,19 @@ def test_can_create_order(orders_service, orders_rpc):
             ]}}
     )] == orders_service.event_dispatcher.call_args_list
 
-
 @pytest.mark.usefixtures('db_session', 'order_details')
 def test_can_update_order(orders_rpc, order):
     order_payload = OrderSchema().dump(order).data
     for order_detail in order_payload['order_details']:
         order_detail['quantity'] += 1
-
     updated_order = orders_rpc.update_order(order_payload)
-
     assert updated_order['order_details'] == order_payload['order_details']
-
 
 def test_can_delete_order(orders_rpc, order, db_session):
     orders_rpc.delete_order(order.id)
     assert not db_session.query(Order).filter_by(id=order.id).count()
+
+def test_list_orders(orders_rpc, order, order_details, db_session):
+    response = orders_rpc.list_orders()
+    assert len(response) > 0
+    assert response[0]['id'] == order.id

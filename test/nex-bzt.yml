@@ -9,7 +9,7 @@ execution:
   ramp-up: 1m
   hold-for: 12h
   scenario: nex
-      
+
 scenarios:
   nex:
     data-sources:
@@ -27,7 +27,6 @@ scenarios:
       headers:
         cache-control: no-cache
         Content-Type: application/json
-      body: 'request-body-string'
       body: >
         {
           "id": "${id}-${__javaScript(Math.random())}",
@@ -54,7 +53,6 @@ scenarios:
       label: product-get
       think-time: uniform(0s, 0s)
       method: GET
-        
       assert:
       - contains:
         - 200
@@ -64,7 +62,18 @@ scenarios:
         product_key: $.id
         default: NOT_FOUND
 
-    # 3. Create Orders
+    # 3. List Products
+    - url: /products
+      label: products-list
+      think-time: uniform(0s, 0s)
+      method: GET
+      assert:
+      - contains:
+        - 200
+        subject: http-code
+        not: false
+
+    # 4. Create Orders
     - url: /orders
       label: orders-create
       think-time: uniform(0s, 0s)
@@ -72,7 +81,6 @@ scenarios:
       headers:
         cache-control: no-cache
         Content-Type: application/json
-      body: 'request-body-string'
       body: >
         {
           "order_details": [{"product_id": "${product_id}", "price": "100000.99", "quantity": 1}]
@@ -85,17 +93,16 @@ scenarios:
       extract-jsonpath:
         order_id: $.id
         default: NOT_FOUND
-  
+
     - if: '"${order_id}" == "NOT_FOUND"'
       then:
         - action: continue
-  
-    # 4. Get Orders
+
+    # 5. Get Orders
     - url: /orders/${order_id}
       label: order-get
       think-time: uniform(0s, 0s)
       method: GET
-        
       assert:
       - contains:
         - 200
@@ -104,11 +111,33 @@ scenarios:
       extract-jsonpath:
         order_id: $.id
         default: NOT_FOUND
-        
+
     - if: '"${order_id}" == "NOT_FOUND"'
       then:
         - action: continue
-  
+
+    # 6. List Orders
+    - url: /orders
+      label: orders-list
+      think-time: uniform(0s, 0s)
+      method: GET
+      assert:
+      - contains:
+        - 200
+        subject: http-code
+        not: false
+
+    # 7. Delete Product
+    - url: /products/${product_id}
+      label: product-delete
+      think-time: uniform(0s, 0s)
+      method: DELETE
+      assert:
+      - contains:
+        - 200
+        subject: http-code
+        not: false
+
 reporting:
 - module: final-stats
   dump-xml: stats.xml

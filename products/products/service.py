@@ -1,18 +1,13 @@
 import logging
-
 from nameko.events import event_handler
 from nameko.rpc import rpc
-
 from products import dependencies, schemas
 
-
 logger = logging.getLogger(__name__)
-
 
 class ProductsService:
 
     name = 'products'
-
     storage = dependencies.Storage()
 
     @rpc
@@ -29,6 +24,15 @@ class ProductsService:
     def create(self, product):
         product = schemas.Product(strict=True).load(product).data
         self.storage.create(product)
+
+    @rpc
+    def delete_product(self, product_id):
+        product = self.storage.get(product_id)
+        if product:
+            self.storage.delete(product_id)
+            return {"status": "success", "message": "Product deleted"}
+        else:
+            return {"status": "error", "message": "Product not found"}
 
     @event_handler('orders', 'order_created')
     def handle_order_created(self, payload):
